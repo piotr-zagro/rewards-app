@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface TransactionService {
     Transaction putTransaction(Transaction transaction);
+
     List<Transaction> getTransactionsForUser(String userId, ZonedDateTime fromDate);
 }

@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface TransactionRepository {
 
     Transaction saveTransaction(Transaction transaction);
+
     Optional<Transaction> getTransaction(String transactionId);
+
     List<Transaction> getTransactions(String userId, ZonedDateTime fromDate);
 }

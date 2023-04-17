@@ -22,13 +22,14 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {Main.class})
 @WebAppConfiguration
-@TestPropertySource(locations="classpath:application-test.yaml")
+@TestPropertySource(locations = "classpath:application-test.yaml")
 class TransactionControllerIT {
 
     @Autowired

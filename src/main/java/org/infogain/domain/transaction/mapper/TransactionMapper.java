@@ -8,6 +8,8 @@ import org.mapstruct.Mapper;
 @Mapper
 public interface TransactionMapper {
     Transaction toDomain(TransactionRequest transactionRequest);
+
     Transaction toDomain(String transactionId, TransactionRequest transactionRequest);
+
     TransactionResponse toApi(Transaction transaction);
 }
