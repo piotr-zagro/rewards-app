@@ -70,23 +70,6 @@ class RewardServiceImplTest {
         );
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "120, 90",
-            "60, 10",
-            "50, 0",
-            "100, 50",
-            "100.1, 50",
-            "100.9, 50"
-    })
-    void should_calculatePoints_returnCorrectAmountOfPoints(double amount, int expectedPoints) {
-        // given // when
-//        int actualPoints = rewardServiceImpl.calculatePoints(amount);
-
-        // then
-//        assertThat(actualPoints).isEqualTo(expectedPoints);
-    }
-
     private Transaction buildTransaction(ZonedDateTime createdAt, double amount) {
         return Transaction.builder()
                 .transactionId("trId")
