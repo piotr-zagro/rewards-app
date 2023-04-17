@@ -6,6 +6,7 @@ import org.infogain.application.response.TransactionResponse;
 import org.infogain.domain.transaction.mapper.TransactionMapper;
 import org.infogain.domain.transaction.model.Transaction;
 import org.infogain.domain.transaction.service.TransactionService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,7 @@ public class TransactionController {
     @PostMapping
     public ResponseEntity<TransactionResponse> createTransaction(@RequestBody TransactionRequest request) {
         Transaction transaction = transactionService.putTransaction(transactionMapper.toDomain(request));
-        return ResponseEntity.ok(transactionMapper.toApi(transaction));
+        return ResponseEntity.status(HttpStatus.CREATED).body(transactionMapper.toApi(transaction));
     }
 
     @PutMapping("/{transactionId}")

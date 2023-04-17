@@ -9,8 +9,11 @@ import java.util.List;
 @Repository
 public class UserRepositoryInMemoryImpl implements UserRepository {
 
-    @Value("users")
-    private List<String> userIds;
+    private final List<String> userIds;
+
+    public UserRepositoryInMemoryImpl(@Value("#{'${userIds}'.split(',')}") List<String> userIds) {
+        this.userIds = userIds;
+    }
 
     @Override
     public boolean userExists(String userId) {
