@@ -4,6 +4,4 @@ import org.infogain.domain.reward.model.RewardDetails;
 
 public interface RewardService {
     RewardDetails getRewardDetailsForUser(String userId);
-    RewardDetails addPointsToUser(String userId, int pointsToAdd);
-    int calculatePoints(double amount);
 }

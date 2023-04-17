@@ -1,16 +1,19 @@
 package org.infogain.domain.transaction.service;
 
-import org.infogain.domain.reward.service.RewardService;
 import org.infogain.domain.transaction.exception.TransactionNotFoundException;
 import org.infogain.domain.transaction.model.Transaction;
 import org.infogain.domain.transaction.repository.TransactionRepository;
 import org.infogain.domain.user.service.UserService;
+import org.infogain.domain.util.DateTimeUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,22 +31,22 @@ class TransactionServiceImplTest {
     @Mock
     private UserService userService;
     @Mock
-    private RewardService rewardService;
-    @Mock
     private TransactionIdProvider transactionIdProvider;
+    @Mock
+    private DateTimeUtil dateTimeUtil;
 
     private TransactionServiceImpl transactionServiceImpl;
 
     @BeforeEach
     void setUp() {
-        transactionServiceImpl = new TransactionServiceImpl(transactionRepository, userService, rewardService, transactionIdProvider);
+        transactionServiceImpl = new TransactionServiceImpl(transactionRepository, userService, transactionIdProvider, dateTimeUtil);
     }
 
     @Test
-    void should_putTransaction_addNewTransactionAndIncreasePoints() {
+    void should_putTransaction_addNewTransaction() {
         // given
         final double amountToSave = 100.0;
-        final int pointsToAdd = 50;
+        ZonedDateTime fixedNow = ZonedDateTime.of(2023, 1, 1, 1, 1, 1, 1, ZoneOffset.UTC);
 
         Transaction inputTransaction = Transaction.builder()
                 .transactionId(null)
@@ -54,9 +57,10 @@ class TransactionServiceImplTest {
                 .transactionId(TRANSACTION_ID)
                 .userId(USER_ID)
                 .amount(amountToSave)
+                .createdAt(fixedNow)
                 .build();
 
-        when(rewardService.calculatePoints(amountToSave)).thenReturn(pointsToAdd);
+        when(dateTimeUtil.now()).thenReturn(fixedNow);
         when(transactionIdProvider.generateTransactionId()).thenReturn(TRANSACTION_ID);
         when(transactionRepository.saveTransaction(transactionToSave)).thenReturn(transactionToSave);
 
@@ -67,7 +71,6 @@ class TransactionServiceImplTest {
         // then
         verify(userService, times(1)).validateUserExists(USER_ID);
         verify(transactionRepository, never()).getTransaction(anyString());
-        verify(rewardService, times(1)).addPointsToUser(USER_ID, pointsToAdd);
 
         assertThat(actualTransaction).isEqualTo(transactionToSave);
     }
@@ -92,28 +95,27 @@ class TransactionServiceImplTest {
     }
 
     @Test
-    void should_putTransaction_editTransactionAndEditPointsProperly() {
+    void should_putTransaction_editTransaction() {
         // given
         final double oldAmount = 60.0;
         final double amountToSave = 100.0;
-        final int pointsToRemove = 10;
-        final int pointsToAdd = 50;
         final String differentUserId = "differentUserId";
+        ZonedDateTime fixedNow = ZonedDateTime.of(2023, 1, 1, 1, 1, 1, 1, ZoneOffset.UTC);
 
         Transaction existingTransaction = Transaction.builder()
                 .transactionId(TRANSACTION_ID)
                 .userId(differentUserId)
                 .amount(oldAmount)
+                .createdAt(fixedNow)
                 .build();
         Transaction transactionToSave = Transaction.builder()
                 .transactionId(TRANSACTION_ID)
                 .userId(USER_ID)
                 .amount(amountToSave)
+                .createdAt(fixedNow)
                 .build();
 
         when(transactionRepository.getTransaction(TRANSACTION_ID)).thenReturn(Optional.of(existingTransaction));
-        when(rewardService.calculatePoints(oldAmount)).thenReturn(pointsToRemove);
-        when(rewardService.calculatePoints(amountToSave)).thenReturn(pointsToAdd);
         when(transactionRepository.saveTransaction(transactionToSave)).thenReturn(transactionToSave);
 
         // when
@@ -121,9 +123,35 @@ class TransactionServiceImplTest {
 
         // then
         verify(userService, times(1)).validateUserExists(USER_ID);
-        verify(rewardService, times(1)).addPointsToUser(USER_ID, pointsToAdd);
-        verify(rewardService, times(1)).addPointsToUser(differentUserId, -pointsToRemove);
 
         assertThat(actualTransaction).isEqualTo(transactionToSave);
+    }
+
+    @Test
+    void should_getTransactionsForUser_returnTransactionsForUser() {
+        // given
+        final double amountToSave = 100.0;
+        ZonedDateTime fromDate = ZonedDateTime.of(2023, 1, 1, 1, 1, 1, 1, ZoneOffset.UTC);
+
+        Transaction transaction1 = Transaction.builder()
+                .transactionId(TRANSACTION_ID)
+                .userId(USER_ID)
+                .amount(amountToSave)
+                .build();
+        Transaction transaction2 = Transaction.builder()
+                .transactionId(TRANSACTION_ID)
+                .userId(USER_ID)
+                .amount(amountToSave)
+                .build();
+
+        when(transactionRepository.getTransactions(USER_ID, fromDate)).thenReturn(List.of(transaction1, transaction2));
+
+        // when
+        List<Transaction> actualTransactions = transactionServiceImpl.getTransactionsForUser(USER_ID, fromDate);
+
+        // then
+        verify(userService, times(1)).validateUserExists(USER_ID);
+
+        assertThat(actualTransactions).containsExactly(transaction1, transaction2);
     }
 }

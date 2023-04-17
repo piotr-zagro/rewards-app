@@ -1,13 +1,15 @@
 package org.infogain.domain.transaction.service;
 
 import lombok.RequiredArgsConstructor;
-import org.infogain.domain.reward.service.RewardService;
 import org.infogain.domain.transaction.exception.TransactionNotFoundException;
 import org.infogain.domain.transaction.model.Transaction;
 import org.infogain.domain.transaction.repository.TransactionRepository;
 import org.infogain.domain.user.service.UserService;
+import org.infogain.domain.util.DateTimeUtil;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,42 +19,30 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final UserService userService;
-    private final RewardService rewardService;
     private final TransactionIdProvider transactionIdProvider;
+    private final DateTimeUtil dateTimeUtil;
 
     @Override
     public Transaction putTransaction(Transaction transaction) {
         userService.validateUserExists(transaction.getUserId());
         validateTransactionForEdits(transaction);
 
-        removePointsFromOldTransaction(transaction);
-
-        addPointsFromTransaction(transaction);
-
-        return transactionRepository.saveTransaction(ensureTransactionId(transaction));
+        return transactionRepository.saveTransaction(enrichData(transaction));
     }
 
-    private void removePointsFromOldTransaction(Transaction transaction) {
-        if (Objects.isNull(transaction.getTransactionId())) {
-            return;
-        }
-
-        Transaction oldTransaction = transactionRepository.getTransaction(transaction.getTransactionId()).get();
-        int pointsToRemove = rewardService.calculatePoints(oldTransaction.getAmount());
-        rewardService.addPointsToUser(oldTransaction.getUserId(), -pointsToRemove);
+    @Override
+    public List<Transaction> getTransactionsForUser(String userId, ZonedDateTime fromDate) {
+        userService.validateUserExists(userId);
+        return transactionRepository.getTransactions(userId, fromDate);
     }
 
-    private void addPointsFromTransaction(Transaction transaction) {
-        int pointsToAdd = rewardService.calculatePoints(transaction.getAmount());
-        rewardService.addPointsToUser(transaction.getUserId(), pointsToAdd);
-    }
-
-    private Transaction ensureTransactionId(Transaction transaction) {
+    private Transaction enrichData(Transaction transaction) {
         if (Objects.nonNull(transaction.getTransactionId())) {
             return transaction;
         }
         return transaction.toBuilder()
                 .transactionId(transactionIdProvider.generateTransactionId())
+                .createdAt(dateTimeUtil.now())
                 .build();
     }
 
