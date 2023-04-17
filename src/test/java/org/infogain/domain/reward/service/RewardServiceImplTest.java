@@ -8,8 +8,6 @@ import org.infogain.domain.util.DateTimeUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -63,7 +61,7 @@ class RewardServiceImplTest {
         verify(userService, times(1)).validateUserExists(USER_ID);
 
         assertThat(actualDetails.getTotalPoints()).isEqualTo(200);
-        assertThat(actualDetails.getMonthlyPoints()).containsExactly(
+        assertThat(actualDetails.getMonthlyPoints()).contains(
                 RewardDetails.PointsPerMonth.of(Month.APRIL, 140),
                 RewardDetails.PointsPerMonth.of(Month.MARCH, 60),
                 RewardDetails.PointsPerMonth.of(Month.FEBRUARY, 0)

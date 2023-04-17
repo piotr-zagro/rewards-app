@@ -43,7 +43,7 @@ public class RewardServiceImpl implements RewardService {
 
     private Map<Month, Integer> computePointsPerMonth(List<Transaction> transactions) {
         return transactions.stream()
-                .map(transaction -> Pair.with(transaction.getCreatedAt().toLocalDate().getMonth(), computePoints(transaction.getAmount())))
+                .map(transaction -> Pair.with(transaction.getCreatedAt().getMonth(), computePoints(transaction.getAmount())))
                 .collect(Collectors.groupingBy(Pair::getValue0, Collectors.summingInt(Pair::getValue1)));
     }
 
